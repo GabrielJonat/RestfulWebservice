@@ -79,7 +79,17 @@ public class VendaServices {
     }
 
     public List<Venda> filtrarVendasPorData(LocalDateTime startDate, LocalDateTime endDate) {
-        return vendaRepository.findByDataBetween(startDate, endDate);
+        
+    	if(startDate.isAfter(LocalDateTime.now())) {
+    		
+    		throw new UnsuportedOp("O período da filtragemdata deve estar no passado");
+    	}
+    	if(startDate.isAfter(endDate)) {
+    		
+    		throw new UnsuportedOp("A data inicial deve ser anterior a data final");
+    	}
+    	
+    	return vendaRepository.findByDataBetween(startDate, endDate);
     }
     
     public List<Venda> relatorioSemanal() {
