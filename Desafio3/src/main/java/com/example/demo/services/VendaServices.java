@@ -57,6 +57,43 @@ public class VendaServices {
          return vendaRepository.save(venda);
     }
 
+    public Venda atualizarVenda(List<Long> produtoIds, String id) {
+   	 
+    	Venda venda = vendaRepository.findById(Long.parseLong(id))
+                .orElseThrow(() -> new ResourceNotFound("Venda não encontrada"));
+        for (Produto produto : venda.getProdutos()) {
+            Produto p = produtoRepository.findById(produto.getId())
+                    .orElseThrow(() -> new ResourceNotFound("Produto não encontrado"));
+            p.setEstoque(p.getEstoque() + 1);
+            produtoRepository.save(p);
+        }
+    	if(!validVenda(produtoIds)) {
+       	 
+       	 throw new UnsuportedOp("É necessário incluir ao menos um produto para efetuar a venda");
+        }
+    	List<Produto> produtos = produtoIds.stream()
+                 .map(idProd -> produtoRepository.findById(idProd)
+                         .orElseThrow(() -> new ResourceNotFound("Produto não encontrado: " + idProd)))
+                 .collect(Collectors.toList());
+
+         for (Produto produto : produtos) {
+             if (produto.getEstoque() < 1) {
+                 throw new UnsuportedOp("Estoque insuficiente para o produto: " + produto.getNome());
+             }
+             
+             if(produto.getAtivo() == false) {
+            	 throw new UnsuportedOp("produto "+ produto.getNome() +" se encontra inativo");
+             }
+             
+             produto.setEstoque(produto.getEstoque() - 1);
+             produtoRepository.save(produto);
+         }
+
+         venda.setData(LocalDateTime.now());
+         venda.setProdutos(produtos);
+         return vendaRepository.save(venda);
+    }
+
     public List<Venda> listarVendas() {
         return vendaRepository.findAll();
     }
@@ -71,7 +108,7 @@ public class VendaServices {
                 .orElseThrow(() -> new ResourceNotFound("Venda não encontrada"));
         for (Produto produto : venda.getProdutos()) {
             Produto p = produtoRepository.findById(produto.getId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFound("Produto não encontrado"));
             p.setEstoque(p.getEstoque() + 1);
             produtoRepository.save(p);
         }

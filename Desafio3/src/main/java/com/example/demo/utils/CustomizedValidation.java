@@ -2,6 +2,7 @@ package com.example.demo.utils;
 import java.util.List;
 
 import com.example.demo.models.Produto;
+import com.example.demo.models.User;
 
 
 public class CustomizedValidation {
@@ -26,6 +27,24 @@ public class CustomizedValidation {
 		    	return false;
 		    	}
 		 
+		
+		return true;
+		
+		
+	}
+	
+	public static boolean validUsuario(List<User> usuarios, User usuario){
+		
+		if(usuario.getUsername().isBlank() || usuario.getPassword().isBlank() || usuario.getUsername().length() > 40 || usuario.getPassword().length() > 40 || !(usuario.getRole().equals("ROLE_USER") || usuario.getRole().equals("ROLE_ADMIN"))){
+			
+			return false;
+		}
+		for(User usuarioListado : usuarios) {
+			
+			if(usuarioListado == usuario)
+				
+				return false;
+		}
 		
 		return true;
 		
