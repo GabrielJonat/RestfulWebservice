@@ -39,5 +39,14 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 		return new ResponseEntity<>(er, HttpStatus.NOT_FOUND);
 		
 	}
+	
+	@ExceptionHandler(AuthException.class)
+	public final ResponseEntity<ExceptionResponse> handleAuth(Exception err, WebRequest req){
+		
+		ExceptionResponse er = new ExceptionResponse(new Date(), err.getMessage(), req.getDescription(false));
+		
+		return new ResponseEntity<>(er, HttpStatus.UNAUTHORIZED);
+		
+	}
 
 }

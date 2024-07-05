@@ -1,15 +1,19 @@
 package com.example.demo.services;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.example.demo.exception.ResourceNotFound;
+import com.example.demo.exception.UnsuportedOp;
 import com.example.demo.models.User;
 import com.example.demo.repositories.UserRepository;
 
@@ -23,9 +27,42 @@ public class UserServices {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public String obterNomeDoUsuario() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal(); // Use UserDetails instead of UserDetailsService
+        String userInfo = userDetails.toString();
+        return userInfo.substring(userInfo.indexOf("Username=") + 9,userInfo.indexOf(','));
+    }
+    
+    public String mostrarPermissoes() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        StringBuilder roles = new StringBuilder();
+        for (GrantedAuthority authority : authorities) {
+            roles.append(authority.getAuthority()).append(" ");
+        }
+
+        return roles.toString().trim();
+    }
+    
     @CacheEvict(value = "usuarios", allEntries = true)
     public User saveUser(String username, String rawPassword, String role) {
-        User user = new User();
+        
+    	String permissao = this.mostrarPermissoes();
+    	if( permissao.equals("ROLE_USER") && !role.equals(permissao)) {
+    		
+    		throw new UnsuportedOp("Usuários não podem cadastrar administradores sua permissao é de " + permissao);
+    	}
+    	List<User> usuarios = this.listarUsuarios();
+    	for(User usuario : usuarios) {
+    		
+    		if(usuario.getUsername().equals(username)) {
+    			
+    			throw new UnsuportedOp("Usuário já cadastrado");
+    		}
+    	}
+    	User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRole(role);
@@ -47,6 +84,11 @@ public class UserServices {
     @CacheEvict(value = "usuarios", allEntries = true)
 	public void excluirUsuario(String id) {
 		
+    	String permissao = this.mostrarPermissoes();
+    	if(!permissao.equals("ROLE_ADMIN")) {
+    		
+    		throw new UnsuportedOp("Somente Admins podem deletar usuários sua permissao é de " + permissao);
+    	}
 		User usuario = userRepository.findById(Long.parseLong(id)).orElseThrow(() -> new ResourceNotFound("User not found"));
 		userRepository.delete(usuario);
 		
@@ -55,6 +97,11 @@ public class UserServices {
     @CacheEvict(value = "usuarios", allEntries = true)
 	public void atualizarUsuario(String id, User subject) {
 		
+    	String permissao = this.mostrarPermissoes();
+    	if(!permissao.equals("ROLE_ADMIN")) {
+    		
+    		throw new UnsuportedOp("Somente Admins podem alterar usuários sua permissao é de " + permissao);
+    	}
 		subject.setId(Long.parseLong(id));
 		subject.setPassword(passwordEncoder.encode(subject.getPassword()));
 		userRepository.save(subject);

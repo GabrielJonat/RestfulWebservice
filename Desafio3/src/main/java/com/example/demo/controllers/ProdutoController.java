@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.exception.UnsuportedOp;
 import com.example.demo.models.Produto;
 import com.example.demo.services.ProdutoServices;
+import com.example.demo.services.UserLogServices;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,10 +32,14 @@ public class ProdutoController {
     @Autowired
     private ProdutoServices produtoService;
 
+    @Autowired
+    private UserLogServices logService;
+    
     @PostMapping
     public ResponseEntity<?> criarProduto(@RequestBody Produto produto) throws Exception{
         if(validProduct(produto)) {
     	produtoService.save(produto);
+    	logService.registrarLog("Cadastro de produto");
     	return ResponseEntity.created(null).build();
     	}
         throw new UnsuportedOp("O preço do produto, assim como o estoque devem ser positivos");
@@ -53,6 +58,7 @@ public class ProdutoController {
 	})
 	public List<Produto> listarProdutos(){
 		
+    	logService.registrarLog("Listagem de produto");
 		return produtoService.findAll();
 		
 	}
@@ -60,6 +66,7 @@ public class ProdutoController {
     @GetMapping("/{id}")
     public Produto buscarProdutoPorId(@PathVariable (value = "id") String id) {
     	
+    	logService.registrarLog("Pesquisa por produto");
     	return produtoService.findById(id);
     }
 
@@ -68,6 +75,7 @@ public class ProdutoController {
         
     	if(validProduct(produto)) {
     	produtoService.update(id, produto);
+    	logService.registrarLog("Atualização de informações de produto");
     	return ResponseEntity.ok().build();
     	}
     	throw new UnsuportedOp("O preço do produto, assim como o estoque devem ser positivos");
@@ -77,12 +85,14 @@ public class ProdutoController {
     public ResponseEntity<?> deletarProduto(@PathVariable(value = "id") String id) {
        
     	produtoService.delete(id);
+    	logService.registrarLog("Exclusão de produto");
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/inativar/{id}")
     public ResponseEntity<?> inativarProduto(@PathVariable (value = "id") String id) {
         produtoService.unactivate(id);
+        logService.registrarLog("Inativação de produto");
         return ResponseEntity.ok().build();
     }
 }
