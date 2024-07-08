@@ -77,19 +77,20 @@ public class UserServices {
     
     public User buscarUsuario(String id){
     	
-    	User usuario = userRepository.findById(Long.parseLong(id)).orElseThrow(() -> new ResourceNotFound("User not found"));
+    	User usuario = userRepository.findById(Long.parseLong(id)).orElseThrow(() -> new ResourceNotFound("Usuário não encontrado"));
 		return usuario;
     }
     
     @CacheEvict(value = "usuarios", allEntries = true)
 	public void excluirUsuario(String id) {
 		
+    	String nome = this.obterNomeDoUsuario();
     	String permissao = this.mostrarPermissoes();
-    	if(!permissao.equals("ROLE_ADMIN")) {
-    		
-    		throw new UnsuportedOp("Somente Admins podem deletar usuários sua permissao é de " + permissao);
-    	}
-		User usuario = userRepository.findById(Long.parseLong(id)).orElseThrow(() -> new ResourceNotFound("User not found"));
+		User usuario = userRepository.findById(Long.parseLong(id)).orElseThrow(() -> new ResourceNotFound("Usuário não encontrado"));
+		if(permissao.equals("ROLE_USER") && !nome.equals(usuario.getUsername())) {
+			
+			throw new UnsuportedOp("Somente Admins podem deletar outros usuários");
+		}
 		userRepository.delete(usuario);
 		
 	}
@@ -97,10 +98,16 @@ public class UserServices {
     @CacheEvict(value = "usuarios", allEntries = true)
 	public void atualizarUsuario(String id, User subject) {
 		
+    	User usuario = userRepository.findById(Long.parseLong(id)).orElseThrow(() -> new ResourceNotFound("Usuário não encontrado"));
+    	String nome = this.obterNomeDoUsuario();
     	String permissao = this.mostrarPermissoes();
-    	if(!permissao.equals("ROLE_ADMIN")) {
+		if(permissao.equals("ROLE_USER") && !nome.equals(usuario.getUsername())) {
+			
+			throw new UnsuportedOp("Somente Admins podem alterar informações de outros usuários ");
+		}
+		if(permissao.equals("ROLE_USER") && !subject.getRole().equals(permissao)) {
     		
-    		throw new UnsuportedOp("Somente Admins podem alterar usuários sua permissao é de " + permissao);
+    		throw new UnsuportedOp("Usuários não podem alterar suas permissões");
     	}
 		subject.setId(Long.parseLong(id));
 		subject.setPassword(passwordEncoder.encode(subject.getPassword()));

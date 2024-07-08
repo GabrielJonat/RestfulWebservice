@@ -24,6 +24,11 @@ public class Venda {
 	      joinColumns = @JoinColumn(name = "venda_id"),
 	      inverseJoinColumns = @JoinColumn(name = "produto_id"))
 	    private List<Produto> produtos;
+	    
+	    private Double total = 0D;
+	    
+	    public Venda() {
+	    }
 
 		public Long getId() {
 			return id;
@@ -47,9 +52,12 @@ public class Venda {
 
 		public void setProdutos(List<Produto> produtos) {
 			this.produtos = produtos;
+			total = produtos.stream().mapToDouble(produto -> produto.getPreco()).sum();
 		}
 
+		public Double getTotal() {
+			return total;
+		}
 		
-	    
 	    
 	}

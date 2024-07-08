@@ -119,7 +119,7 @@ public class VendaServices {
         
     	if(startDate.isAfter(LocalDateTime.now())) {
     		
-    		throw new UnsuportedOp("O período da filtragemdata deve estar no passado");
+    		throw new UnsuportedOp("O período da filtragem deve estar no passado");
     	}
     	if(startDate.isAfter(endDate)) {
     		

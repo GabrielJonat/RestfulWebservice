@@ -113,9 +113,9 @@ public class UserController {
     @GetMapping("/log/filtrar")
     public List<UserLog> FiltrarDeRegistroDeUsuarios(
     		@RequestParam("DataInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam("DataFim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) throws AuthException {
+            @RequestParam("DataFim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate){
     	
-    	return logService.filtrarLogsPorData(endDate, endDate);
+    	return logService.filtrarLogsPorData(startDate, endDate);
     	
     }
 }
