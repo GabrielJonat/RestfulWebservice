@@ -57,7 +57,7 @@ public class UserController {
     @GetMapping("/eu")
     public ResponseEntity<User> authenticatedUser() {
     	
-    	logService.registrarLog("Obtenção de nformações do usuário logado");
+    	logService.registrarLog("Obtenção de informações do usuário logado");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         User currentUser = (User) authentication.getPrincipal();
@@ -165,14 +165,18 @@ public class UserController {
 	         
 	         CodigosDeSeguranca token = tokenService.findByCode(passwordDto.getToken());
 	         
+	         if(token == null) {
+	        	 
+	        	 throw new UnsuportedOp("Código inválido");
+	         }
 	         if(currentUser.getEmail().equals(token.getUserEmail()) && token.getValid()) {
 	         
 	        	 
 	        	 userService.atualizarSenha(currentUser, encoder.encode(passwordDto.getNewPassword()));
 	        	 tokenService.updateToken(token);
 	        	 logService.registrarLog("alteração de senha");
-	        	 
+	        	 return ResponseEntity.ok().build();
 	         }
-	         return ResponseEntity.ok().build();
+	         throw new UnsuportedOp("Código inativo ou pertecente a outro usuário");
 	}
 }
